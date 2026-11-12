@@ -13,6 +13,43 @@ except ImportError:
 from sentinel.core.models import SecurityEvent, DetectionRule, Alert
 
 
+def _parse_yaml_fallback(text: str) -> Dict[str, Any]:
+    """Lightweight standalone fallback YAML parser for simple detection rules."""
+    result = {}
+    current_key = None
+
+    for raw_line in text.splitlines():
+        line = raw_line.rstrip()
+        if not line or line.strip().startswith("#"):
+            continue
+
+        indent = len(line) - len(line.lstrip())
+        stripped = line.strip()
+
+        if indent == 0 and ":" in stripped:
+            k, v = stripped.split(":", 1)
+            k = k.strip()
+            v = v.strip().strip('"').strip("'")
+            current_key = k
+            if v:
+                result[k] = v
+        elif indent > 0 and current_key:
+            if stripped.startswith("- "):
+                val = stripped[2:].strip().strip('"').strip("'")
+                if current_key not in result or not isinstance(result[current_key], list):
+                    result[current_key] = []
+                result[current_key].append(val)
+            elif ":" in stripped:
+                sub_k, sub_v = stripped.split(":", 1)
+                sub_k = sub_k.strip()
+                sub_v = sub_v.strip().strip('"').strip("'")
+                if current_key not in result or not isinstance(result[current_key], dict):
+                    result[current_key] = {}
+                result[current_key][sub_k] = sub_v
+
+    return result
+
+
 class RuleEngine:
     """
     Evaluates raw security telemetry events against Detection-as-Code rules.
@@ -28,11 +65,15 @@ class RuleEngine:
 
     def load_rule_from_file(self, file_path: Path) -> DetectionRule:
         with open(file_path, "r", encoding="utf-8") as f:
-            if yaml is not None:
-                content = yaml.safe_load(f)
-            else:
-                # Basic JSON fallback if yaml parser is not present
-                content = json.load(f)
+            raw_text = f.read()
+
+        if file_path.suffix.lower() == ".json":
+            content = json.loads(raw_text)
+        elif yaml is not None:
+            content = yaml.safe_load(raw_text)
+        else:
+            content = _parse_yaml_fallback(raw_text)
+
         rule = DetectionRule(**content)
         self.rules[rule.id] = rule
         return rule
@@ -50,12 +91,12 @@ class RuleEngine:
         if event_value is None:
             return False
 
-        str_event = str(event_value).lower()
-
         if isinstance(expected_value, list):
             return any(self._match_field(event_value, item) for item in expected_value)
 
-        str_expected = str(expected_value).lower()
+        # Normalize path separators for robust cross-platform path matching
+        str_event = re.sub(r"[\\/]+", "/", str(event_value).lower())
+        str_expected = re.sub(r"[\\/]+", "/", str(expected_value).lower())
 
         # Wildcard prefix/suffix handling
         if str_expected.startswith("*") and str_expected.endswith("*"):

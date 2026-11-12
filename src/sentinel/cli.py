@@ -7,6 +7,7 @@ from typing import List
 from sentinel.core.models import SecurityEvent
 from sentinel.rules.engine import RuleEngine
 from sentinel.triage.incident import IncidentTriageReport
+from sentinel.coverage.mitre import MitreCoverageReport
 
 
 def load_events(telemetry_file: Path) -> List[SecurityEvent]:
@@ -23,7 +24,7 @@ def load_events(telemetry_file: Path) -> List[SecurityEvent]:
     return events
 
 
-def cmd_test_rules(rules_dir: Path, telemetry_dir: Path):
+def cmd_test_rules(rules_dir: Path, telemetry_dir: Path, matrix_output: Path = None):
     engine = RuleEngine()
     rules = engine.load_rules_from_dir(rules_dir)
     print(f"\n🛡️ [Sentinel] Loaded {len(rules)} Detection Rules from {rules_dir}")
@@ -60,7 +61,25 @@ def cmd_test_rules(rules_dir: Path, telemetry_dir: Path):
 
     print("=" * 70)
     print(f"Summary: {passed_rules}/{len(rules)} Rules Passed Verification ({passed_rules/len(rules)*100:.1f}%)")
+
+    if matrix_output:
+        md = MitreCoverageReport.generate_markdown(rules)
+        with open(matrix_output, "w", encoding="utf-8") as f:
+            f.write(md)
+        print(f"📄 [Sentinel] Generated MITRE ATT&CK matrix: {matrix_output}")
+
     return 0 if passed_rules == len(rules) else 1
+
+
+def cmd_matrix(rules_dir: Path, output_file: Path):
+    engine = RuleEngine()
+    rules = engine.load_rules_from_dir(rules_dir)
+    md = MitreCoverageReport.generate_markdown(rules)
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(md)
+    print(f"\n🎯 [Sentinel] MITRE ATT&CK Enterprise Matrix exported to: {output_file}")
+    print(f"Total Rules Mapped: {len(rules)}")
+    return 0
 
 
 def cmd_replay(rules_dir: Path, telemetry_file: Path):
@@ -88,6 +107,11 @@ def main():
     test_parser = subparsers.add_parser("test", help="Test detection rules against telemetry")
     test_parser.add_argument("--rules", type=Path, default=Path("rules"), help="Rules directory")
     test_parser.add_argument("--telemetry", type=Path, default=Path("tests/telemetry"), help="Telemetry directory")
+    test_parser.add_argument("--matrix-output", type=Path, default=None, help="Generate MITRE ATT&CK coverage markdown file")
+
+    matrix_parser = subparsers.add_parser("matrix", help="Generate MITRE ATT&CK coverage matrix")
+    matrix_parser.add_argument("--rules", type=Path, default=Path("rules"), help="Rules directory")
+    matrix_parser.add_argument("--output", type=Path, default=Path("MITRE_COVERAGE.md"), help="Output markdown path")
 
     replay_parser = subparsers.add_parser("replay", help="Replay logs and generate triage dossiers")
     replay_parser.add_argument("--rules", type=Path, default=Path("rules"), help="Rules directory")
@@ -96,7 +120,9 @@ def main():
     args = parser.parse_args()
 
     if args.command == "test":
-        sys.exit(cmd_test_rules(args.rules, args.telemetry))
+        sys.exit(cmd_test_rules(args.rules, args.telemetry, args.matrix_output))
+    elif args.command == "matrix":
+        sys.exit(cmd_matrix(args.rules, args.output))
     elif args.command == "replay":
         sys.exit(cmd_replay(args.rules, args.telemetry))
 

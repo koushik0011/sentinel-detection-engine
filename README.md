@@ -1,7 +1,8 @@
 # 🛡️ Sentinel: Detection-as-Code (DaC) & SOC Incident Triage Engine
 
 [![Detection as Code](https://img.shields.io/badge/Paradigm-Detection_as_Code-blue.svg)](#)
-[![MITRE ATT&CK](https://img.shields.io/badge/Mapped_To-MITRE_ATT%26CK-critical.svg)](https://attack.mitre.org/)
+[![MITRE ATT&CK](https://img.shields.io/badge/Mapped_To-MITRE_ATT%26CK-critical.svg)](MITRE_COVERAGE.md)
+[![GitHub Action](https://img.shields.io/badge/GitHub_Action-Sentinel_DaC-2088FF.svg?logo=githubactions&logoColor=white)](action.yml)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -69,7 +70,30 @@ flowchart TD
 
 ## ⚡ Quickstart
 
-### 1. Test Detection Rules in CI/CD
+### 1. Drop into Any Repository as a GitHub Action
+Add automated detection validation to your detection repo's CI/CD pipeline in seconds:
+
+```yaml
+# .github/workflows/detection_tests.yml
+name: Validate Detection Rules
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Sentinel Detection Validator
+        uses: koushik0011/sentinel-detection-engine@main
+        with:
+          rules-path: "rules/"
+          telemetry-path: "tests/telemetry/"
+          matrix-output: "MITRE_COVERAGE.md"
+```
+
+---
+
+### 2. Run Locally via CLI
 Verify all detection rules against attack datasets and benign baselines:
 
 ```bash

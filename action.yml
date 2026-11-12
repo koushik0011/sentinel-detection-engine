@@ -1,0 +1,44 @@
+name: "Sentinel Detection-as-Code Validator"
+description: "Automated CI/CD validator for Sigma-style YAML detection rules against attack and baseline telemetry with MITRE ATT&CK coverage tracking."
+author: "Koushik (@koushik0011)"
+
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  rules-path:
+    description: "Path to directory containing YAML detection rules"
+    required: false
+    default: "rules/"
+  telemetry-path:
+    description: "Path to directory containing test telemetry (.jsonl)"
+    required: false
+    default: "tests/telemetry/"
+  matrix-output:
+    description: "Output path to export MITRE ATT&CK coverage matrix markdown"
+    required: false
+    default: "MITRE_COVERAGE.md"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Run Sentinel Detection Rule Verification
+      shell: bash
+      run: |
+        export PYTHONPATH="${{ github.action_path }}/src:$PYTHONPATH"
+        python -m sentinel.cli test \
+          --rules "${{ inputs.rules-path }}" \
+          --telemetry "${{ inputs.telemetry-path }}" \
+          --matrix-output "${{ inputs.matrix-output }}"
