@@ -9,7 +9,7 @@ description = "Detection-as-Code (DaC) test harness with automated telemetry rep
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Kethan Kongara", email = "kethan.kongara@sevenai.com" }]
+authors = [{ name = "Koushik", email = "koushik@users.noreply.github.com" }]
 dependencies = [
     "pydantic>=2.5.0",
     "pyyaml>=6.0.1",

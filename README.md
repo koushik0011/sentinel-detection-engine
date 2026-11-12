@@ -74,7 +74,7 @@ Verify all detection rules against attack datasets and benign baselines:
 
 ```bash
 # Clone the repository
-git clone https://github.com/kethankongara-sevenai/sentinel-detection-engine.git
+git clone https://github.com/koushik0011/sentinel-detection-engine.git
 cd sentinel-detection-engine
 
 # Run rule validation harness
@@ -188,4 +188,4 @@ sentinel-detection-engine/
 ---
 
 ## 📄 License
-MIT License. Created by [Kethan Kongara](mailto:kethan.kongara@sevenai.com).
+MIT License. Created by [Koushik (@koushik0011)](https://github.com/koushik0011).
