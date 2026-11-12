@@ -1,0 +1,33 @@
+name: Detection-as-Code CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Unit Tests
+        run: |
+          export PYTHONPATH=src
+          python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Validate Detection Rules Against Telemetry
+        run: |
+          export PYTHONPATH=src
+          python -m sentinel.cli test --rules rules/ --telemetry tests/telemetry/

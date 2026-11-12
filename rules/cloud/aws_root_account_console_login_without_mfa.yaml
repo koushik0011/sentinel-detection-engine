@@ -1,0 +1,21 @@
+id: aws-sec-002
+title: AWS Root Account Console Login Without MFA
+description: Detects AWS management console authentication performed using the root account without Multi-Factor Authentication.
+severity: CRITICAL
+mitre_tactics:
+  - Initial Access
+  - Privilege Escalation
+mitre_techniques:
+  - T1078.004
+logsource:
+  service: cloudtrail
+  product: aws
+selection:
+  eventName: "ConsoleLogin"
+  userIdentity_type: "Root"
+  mfaUsed: "No"
+containment_playbook:
+  - "Lock root account credentials and revoke all active STS console sessions."
+  - "Contact verified AWS account owner via out-of-band verification channel."
+  - "Inspect CloudTrail for newly created IAM Access Keys, roles, or unauthorized resource provisioning."
+  - "Enforce hardware FIDO2 MFA token on root user."

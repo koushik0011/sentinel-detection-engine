@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinel-detection-engine"
+version = "0.1.0"
+description = "Detection-as-Code (DaC) test harness with automated telemetry replay, MITRE ATT&CK mapping, and SOC triage reporting"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Kethan Kongara", email = "kethan.kongara@sevenai.com" }]
+dependencies = [
+    "pydantic>=2.5.0",
+    "pyyaml>=6.0.1",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "httpx>=0.26.0",
+    "ruff>=0.2.0",
+]
+
+[project.scripts]
+sentinel = "sentinel.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

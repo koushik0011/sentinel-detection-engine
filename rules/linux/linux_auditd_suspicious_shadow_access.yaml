@@ -1,0 +1,20 @@
+id: lnx-sec-003
+title: Unauthorized Access to Sensitive Credential File (/etc/shadow)
+description: Detects non-system binaries or unexpected users attempting to read or exfiltrate /etc/shadow hashes.
+severity: HIGH
+mitre_tactics:
+  - Credential Access
+mitre_techniques:
+  - T1003.008
+logsource:
+  service: auditd
+  product: linux
+selection:
+  syscall: "openat"
+  file_path: "/etc/shadow"
+  exe: "*cat"
+containment_playbook:
+  - "Kill the offending user session immediately via pkill/loginctl."
+  - "Lock the compromised local user account in /etc/passwd."
+  - "Audit authorized_keys for newly injected SSH persistence keys."
+  - "Collect shell history from ~/.bash_history and syslog."

@@ -1,0 +1,21 @@
+id: win-sec-001
+title: Suspicious PowerShell Download Cradle Execution
+description: Detects encoded or download-cradle PowerShell execution attempting to fetch remote payloads.
+severity: HIGH
+mitre_tactics:
+  - Execution
+  - Command and Control
+mitre_techniques:
+  - T1059.001
+  - T1105
+logsource:
+  category: process_creation
+  product: windows
+selection:
+  image: "*\\powershell.exe"
+  command_line: "*DownloadString*"
+containment_playbook:
+  - "Immediately isolate host endpoint from the corporate network."
+  - "Terminate the offending PowerShell PID and parent process tree."
+  - "Capture volatile host memory dump for forensic investigation."
+  - "Block remote IP/Domain at the egress perimeter firewall."
